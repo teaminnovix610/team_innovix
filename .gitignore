@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+
+
+jaas-private-key.pk
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Build
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Coverage
+coverage/
+
+# Vite
+.vite/
+
+# Temporary
+tmp/
+temp/
