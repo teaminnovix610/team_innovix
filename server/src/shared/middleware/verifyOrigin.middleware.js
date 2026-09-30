@@ -1,5 +1,5 @@
 const ALLOWED_ORIGINS = [
-    "https://CapacityConnect.vercel.app",
+    "https://capacityconnect-team-innovix.vercel.app",
     "http://localhost:5173",
 ];
 
