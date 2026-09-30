@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import batchController from "./batch.controller.js";
-import { createBatchSchema, assignStudentSchema } from "./batch.validation.js";
+import { createBatchSchema, assignCourseToTrainerSchema, assignStudentSchema } from "./batch.validation.js";
 
 import authenticate from "../../shared/middleware/authenticate.middleware.js";
 import authorize from "../../shared/middleware/authorize.middleware.js";
@@ -38,6 +38,14 @@ router.post(
     batchController.create
 );
 
+router.post(
+    "/assigned-course",
+    authenticate,
+    authorize("ADMIN"),
+    validate(assignCourseToTrainerSchema),
+    batchController.assignCourseToTrainer
+);
+
 router.get(
     "/my",
     authenticate,
@@ -70,21 +78,21 @@ router.patch(
 router.get(
     "/:batchId",
     authenticate,
-    authorize("TEACHER", "ADMIN"),
+    authorize("TEACHER", "TRAINER", "ADMIN"),
     batchController.getBatchById
 );
 
 router.get(
     "/:batchId/students",
     authenticate,
-    authorize("TEACHER", "ADMIN"),
+    authorize("TEACHER", "TRAINER", "ADMIN"),
     batchController.getBatchStudents
 );
 
 router.delete(
     "/:batchId",
     authenticate,
-    authorize("TEACHER", "ADMIN"),
+    authorize("TEACHER", "TRAINER", "ADMIN"),
     batchController.deleteBatch
 );
 

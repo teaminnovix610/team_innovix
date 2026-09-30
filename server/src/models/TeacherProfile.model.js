@@ -9,6 +9,15 @@ const teacherSchema = new mongoose.Schema(
       unique: true,
     },
 
+    // Some deployed databases retain a unique teacherCode index. Always
+    // populate it so newly created profiles never collide on a null value.
+    teacherCode: {
+      type: String,
+      required: true,
+      unique: true,
+      default: () => `TCH-${new mongoose.Types.ObjectId().toString()}`,
+    },
+
     qualification: String,
 
     experience: {

@@ -16,7 +16,8 @@ class AnnouncementController {
 
   async getAllAnnouncements(req, res, next) {
     try {
-      const announcements = await announcementService.getAllAnnouncements();
+      // Pass req.user so the service can apply role-based filtering
+      const announcements = await announcementService.getAllAnnouncements(req.user);
       return res.status(HttpStatus.OK).json(
         new ApiResponse(HttpStatus.OK, "All announcements fetched", announcements)
       );
@@ -27,7 +28,8 @@ class AnnouncementController {
 
   async createAnnouncement(req, res, next) {
     try {
-      const announcement = await announcementService.createAnnouncement(req.body);
+      // Pass req.user so the service sets authorName correctly
+      const announcement = await announcementService.createAnnouncement(req.body, req.user);
       return res.status(HttpStatus.CREATED).json(
         new ApiResponse(HttpStatus.CREATED, "Announcement created successfully", announcement)
       );
@@ -38,7 +40,10 @@ class AnnouncementController {
 
   async updateAnnouncement(req, res, next) {
     try {
-      const announcement = await announcementService.updateAnnouncement(req.params.id, req.body);
+      const announcement = await announcementService.updateAnnouncement(
+        req.params.id,
+        req.body
+      );
       return res.status(HttpStatus.OK).json(
         new ApiResponse(HttpStatus.OK, "Announcement updated", announcement)
       );

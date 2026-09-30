@@ -16,6 +16,23 @@ class RecordingRepository {
       .sort({ createdAt: -1 });
   }
 
+  async findByTeacher(teacherId) {
+    return Recording.find({ teacherId, status: "PUBLISHED" })
+      .populate("batchId")
+      .populate("teacherId")
+      .sort({ createdAt: -1 });
+  }
+
+  async findAvailableToBatches(batchIds) {
+    return Recording.find({
+      status: "PUBLISHED",
+      batchId: { $in: batchIds },
+    })
+      .populate("batchId")
+      .populate("teacherId")
+      .sort({ createdAt: -1 });
+  }
+
   async findByBatch(batchId) {
     return Recording.find({
       batchId,

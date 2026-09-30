@@ -49,6 +49,7 @@ class AssessmentController {
 
         const assessments = await assessmentService.getForBatch(
             req.params.batchId,
+            req.user._id,
             req.user.role
         );
 
@@ -62,6 +63,7 @@ class AssessmentController {
 
         const data = await assessmentService.getDetail(
             req.params.assessmentId,
+            req.user._id,
             req.user.role
         );
 

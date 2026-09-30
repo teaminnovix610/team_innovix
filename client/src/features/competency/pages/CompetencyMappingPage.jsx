@@ -16,6 +16,7 @@ import {
   ArrowRight,
   Plus,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import api from "../../../services/api";
 import { toast } from "sonner";
@@ -57,6 +58,26 @@ export default function CompetencyMappingPage() {
   const [trainers, setTrainers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expandedReasons, setExpandedReasons] = useState({});
+  const [assigningId, setAssigningId] = useState(null);
+
+  const handleAssignToProgram = async (tr) => {
+    setAssigningId(tr.id);
+    try {
+      const payload = {
+        name: selectedSubject,
+        classLevel: "1",
+        teacherId: tr.id,
+        category: "Earth Sciences",
+        description: `Capacity building training program in ${selectedSubject}, assigned via Competency Mapping Engine.`,
+      };
+      await api.post("/batches/assigned-course", payload);
+      toast.success(`Assigned ${tr.fullName} to lead ${selectedSubject} training program!`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || `Failed to assign ${tr.fullName} to ${selectedSubject}`);
+    } finally {
+      setAssigningId(null);
+    }
+  };
 
   useEffect(() => {
     fetchDomains();
@@ -496,10 +517,16 @@ export default function CompetencyMappingPage() {
                 <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
                   <span className="text-xs text-slate-500 font-medium">{tr.email}</span>
                   <button
-                    onClick={() => toast.success(`Assigned ${tr.fullName} to lead ${selectedSubject} training program!`)}
-                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
+                    onClick={() => handleAssignToProgram(tr)}
+                    disabled={assigningId === tr.id}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
                   >
-                    <UserCheck size={14} /> Assign to Program
+                    {assigningId === tr.id ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <UserCheck size={14} />
+                    )}
+                    {assigningId === tr.id ? "Assigning..." : "Assign to Program"}
                   </button>
                 </div>
               </div>

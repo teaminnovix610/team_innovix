@@ -15,24 +15,38 @@ class BatchRepository {
                     path: "userId",
                     select: "firstName lastName email phone",
                 },
-            });
+            })
+            .sort({ createdAt: -1 });
     }
 
     async findAll() {
         return Batch.find()
-            .populate("teacherId")
+            .populate({
+                path: "teacherId",
+                populate: {
+                    path: "userId",
+                    select: "firstName lastName email phone organization role",
+                },
+            })
             .populate({
                 path: "students",
                 populate: {
                     path: "userId",
                     select: "firstName lastName email phone",
                 },
-            });
+            })
+            .sort({ createdAt: -1 });
     }
 
     async findById(batchId) {
         return Batch.findById(batchId)
-            .populate("teacherId")
+            .populate({
+                path: "teacherId",
+                populate: {
+                    path: "userId",
+                    select: "firstName lastName email phone organization role",
+                },
+            })
             .populate({
                 path: "students",
                 populate: {

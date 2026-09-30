@@ -5,7 +5,11 @@ import HttpStatus from "../../shared/constants/HttpStatus.js";
 class RecordingController {
   async create(req, res, next) {
     try {
-      const recording = await recordingService.create(req.user._id, req.body);
+      const recording = await recordingService.create(
+        req.user._id,
+        req.user.role,
+        req.body
+      );
       return res.status(HttpStatus.CREATED).json(
         new ApiResponse(HttpStatus.CREATED, "Recording added successfully", recording)
       );
@@ -16,7 +20,7 @@ class RecordingController {
 
   async getAll(req, res, next) {
     try {
-      const recordings = await recordingService.getAll();
+      const recordings = await recordingService.getAll(req.user._id, req.user.role);
       return res.status(HttpStatus.OK).json(
         new ApiResponse(HttpStatus.OK, "Recordings fetched successfully", recordings)
       );
@@ -88,7 +92,7 @@ class RecordingController {
 
   async studentRecordings(req, res, next) {
     try {
-      const recordings = await recordingService.getStudentRecordings(req.user._id);
+      const recordings = await recordingService.getStudentRecordings(req.user._id, req.user.role);
       return res.status(HttpStatus.OK).json(
         new ApiResponse(HttpStatus.OK, "Recordings fetched successfully", recordings)
       );

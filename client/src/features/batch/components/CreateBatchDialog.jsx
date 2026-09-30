@@ -11,21 +11,21 @@ import {
 import { Button } from "@/components/ui/button";
 import BatchForm from "./BatchForm";
 
-export default function CreateBatchDialog() {
+export default function CreateBatchDialog({ isAdmin = false }) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button className="w-full sm:w-auto" />}>
-        + Create Batch
+        {isAdmin ? "+ Assign Course to Trainer" : "+ Create Batch"}
       </DialogTrigger>
 
       <DialogContent className="max-w-[95vw] sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Create Batch</DialogTitle>
+          <DialogTitle>{isAdmin ? "Assign Course to Trainer" : "Create Batch"}</DialogTitle>
         </DialogHeader>
 
-        <BatchForm closeDialog={() => setOpen(false)} />
+        <BatchForm isAdmin={isAdmin} closeDialog={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );

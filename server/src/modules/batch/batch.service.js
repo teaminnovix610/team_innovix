@@ -17,11 +17,24 @@ async function resolveTeacher(userId) {
   if (!teacher) {
     const user = await User.findById(userId);
     if (!user) throw new ApiError(HttpStatus.NOT_FOUND, "User not found");
-    teacher = await Teacher.create({
-      userId,
-      isApproved: user.isApproved !== false,
-      qualification: "Subject Matter Expert",
-    });
+    try {
+      teacher = await Teacher.create({
+        userId,
+        isApproved: user.isApproved !== false,
+        qualification: "Subject Matter Expert",
+      });
+    } catch (error) {
+      // Another request may have created the profile after the first lookup.
+      if (error.code !== 11000) throw error;
+      teacher = await Teacher.findOne({ userId });
+      if (!teacher) throw error;
+    }
+  } else if (!teacher.isApproved) {
+    const user = await User.findById(userId);
+    if (user && user.isApproved !== false) {
+      teacher.isApproved = true;
+      await teacher.save();
+    }
   }
   return teacher;
 }
@@ -55,6 +68,87 @@ class BatchService {
     });
 
     return batch;
+  }
+
+  async assignCourseToTrainer(data) {
+    let teacher = null;
+
+    if (data.teacherId) {
+      // Check if data.teacherId is already Teacher._id
+      teacher = await Teacher.findById(data.teacherId);
+      // Check if data.teacherId is User._id
+      if (!teacher) {
+        teacher = await Teacher.findOne({ userId: data.teacherId });
+      }
+      // If profile not yet created, resolve from User
+      if (!teacher) {
+        const user = await User.findById(data.teacherId);
+        if (user && ["TRAINER", "TEACHER"].includes(user.role)) {
+          teacher = await resolveTeacher(user._id);
+        }
+      }
+    }
+
+    if (!teacher) {
+      throw new ApiError(HttpStatus.NOT_FOUND, "Trainer not found");
+    }
+
+    const trainerUser = await User.findById(teacher.userId).select("role isActive isApproved");
+    if (!trainerUser || !["TRAINER", "TEACHER"].includes(trainerUser.role)) {
+      throw new ApiError(HttpStatus.BAD_REQUEST, "Selected user is not a trainer");
+    }
+
+    // Since an Admin is explicitly assigning a course, ensure approval and active state
+    if (!teacher.isApproved) {
+      teacher.isApproved = true;
+      await teacher.save();
+    }
+    if (!trainerUser.isApproved) {
+      trainerUser.isApproved = true;
+      await trainerUser.save();
+    }
+    if (trainerUser.isActive === false) {
+      trainerUser.isActive = true;
+      await trainerUser.save();
+    }
+
+    // If assigning an existing batch to this trainer
+    if (data.batchId) {
+      const batch = await Batch.findById(data.batchId);
+      if (!batch) {
+        throw new ApiError(HttpStatus.NOT_FOUND, "Course / Batch not found");
+      }
+      batch.teacherId = teacher._id;
+      if (data.name) batch.name = data.name.trim();
+      if (data.classLevel) batch.classLevel = data.classLevel.trim();
+      if (data.category) batch.category = data.category.trim();
+      await batch.save();
+      return batch;
+    }
+
+    const courseName = (data.name || "").trim();
+    if (!courseName) {
+      throw new ApiError(HttpStatus.BAD_REQUEST, "Course name is required");
+    }
+
+    // Prevent duplicate assignment if this course is already assigned to this trainer
+    const escapedName = courseName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const existing = await Batch.findOne({
+      teacherId: teacher._id,
+      name: { $regex: new RegExp(`^${escapedName}$`, "i") },
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    return batchRepository.create({
+      name: courseName,
+      classLevel: (data.classLevel || "1").trim(),
+      teacherId: teacher._id,
+      category: data.category || "Earth Sciences",
+      description: data.description || "Capacity building and technical competency training program.",
+    });
   }
 
   async getMyBatches(userId) {
@@ -255,6 +349,14 @@ class BatchService {
 
     if (!batch) {
       throw new ApiError(HttpStatus.NOT_FOUND, "Batch not found");
+    }
+
+    if (userRole !== "ADMIN") {
+      const teacher = await resolveTeacher(userId);
+      const batchTeacherId = batch.teacherId?._id?.toString() || batch.teacherId?.toString();
+      if (batchTeacherId !== teacher._id.toString()) {
+        throw new ApiError(HttpStatus.FORBIDDEN, "You can only delete your own batches");
+      }
     }
 
     await Student.updateMany(

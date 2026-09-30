@@ -5,7 +5,7 @@ const recordingSchema = new mongoose.Schema(
     batchId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Batch",
-      default: null,
+      required: true,
     },
 
     teacherId: {

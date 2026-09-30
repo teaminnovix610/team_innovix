@@ -4,7 +4,7 @@ class TeacherRepository {
 
     async findAll() {
         return Teacher.find()
-            .populate("userId", "firstName lastName email phone isActive")
+            .populate("userId", "firstName lastName email phone isActive isApproved role")
             .sort({ createdAt: -1 });
     }
 

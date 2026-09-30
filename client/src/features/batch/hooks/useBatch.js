@@ -8,9 +8,13 @@ export function useBatches() {
     const isAdmin = user?.role === "ADMIN";
 
     return useQuery({
-        queryKey: isAdmin ? ["all-batches"] : ["my-batches"],
+        // Course assignments are private to the signed-in trainer. Scoping the
+        // cache by user also prevents one trainer's cached list flashing for
+        // another trainer after an account switch.
+        queryKey: isAdmin ? ["all-batches"] : ["my-batches", user?._id],
         queryFn: isAdmin ? getBatches : getMyBatches,
         enabled: !!user,
+        staleTime: 0,
     });
 }
 

@@ -3,6 +3,7 @@ import assessmentRepository from "../assessment/assessment.repository.js";
 import Attempt from "../../models/Attempt.model.js";
 
 import Student from "../../models/Student.model.js";
+import skillGapService from "../skillGap/skillGap.service.js";
 
 import ApiError from "../../shared/errors/ApiError.js";
 import HttpStatus from "../../shared/constants/HttpStatus.js";
@@ -296,6 +297,10 @@ class AttemptService {
       percentage: Math.round((score / assessment.totalMarks) * 100),
       submittedAt: attempt.submittedAt,
     });
+
+    if (owner?.userId) {
+      skillGapService.recomputeForTrainee(owner.userId).catch(() => {});
+    }
 
     return attempt;
   }

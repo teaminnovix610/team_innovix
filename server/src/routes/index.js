@@ -20,6 +20,7 @@ import announcementRoutes from "../modules/announcement/announcement.routes.js";
 import competencyRoutes from "../modules/competency/competency.routes.js";
 import feedbackRoutes from "../modules/feedback/feedback.routes.js";
 import certificateRoutes from "../modules/certificate/certificate.routes.js";
+import skillGapRoutes from "../modules/skillGap/skillGap.routes.js";
 
 import healthRoutes from "./health.routes.js";
 
@@ -43,6 +44,7 @@ router.use("/announcements", announcementRoutes);
 router.use("/competency", competencyRoutes);
 router.use("/feedback", feedbackRoutes);
 router.use("/certificates", certificateRoutes);
+router.use("/skill-gap", skillGapRoutes);
 router.use("/users", userRoutes);
 router.use("/health", healthRoutes);
 

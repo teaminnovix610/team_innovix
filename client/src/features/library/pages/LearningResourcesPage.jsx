@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FolderGit2, Search, ExternalLink, Star, MessageSquare } from "lucide-react";
 import api from "../../../services/api";
 import { toast } from "sonner";
+import { getMediaActionLabel, getMediaUrl } from "@/lib/media";
 
 export default function LearningResourcesPage() {
   const [resources, setResources] = useState([]);
@@ -12,22 +13,19 @@ export default function LearningResourcesPage() {
   const [comment, setComment] = useState("");
 
   useEffect(() => {
-    fetchResources();
-  }, []);
-
-  const fetchResources = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get("/recordings");
-      if (res.data?.data) {
-        setResources(res.data.data);
+    const loadResources = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get("/recordings");
+        if (res.data?.data) setResources(res.data.data);
+      } catch {
+        toast.error("Failed to load learning resources");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      toast.error("Failed to load learning resources");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    loadResources();
+  }, []);
 
   const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
@@ -43,7 +41,7 @@ export default function LearningResourcesPage() {
         setFeedbackModal(null);
         setComment("");
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to submit feedback");
     }
   };
@@ -87,37 +85,52 @@ export default function LearningResourcesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((resItem) => (
-              <div key={resItem._id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
-                <div className="space-y-3">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-100 text-cyan-800 uppercase">
-                    {resItem.type || "LEARNING_RESOURCE"}
-                  </span>
+            {filtered.map((resItem) => {
+              const materialUrl = getMediaUrl(resItem);
+              const cardContent = (
+                <>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-100 text-cyan-800 uppercase">
+                      {resItem.type || "LEARNING_RESOURCE"}
+                    </span>
+                    {resItem.subject && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                        {resItem.subject}
+                      </span>
+                    )}
+                  </div>
                   <h3 className="font-bold text-slate-900 text-base">{resItem.title}</h3>
                   <p className="text-xs text-slate-600 line-clamp-3">{resItem.description}</p>
-                </div>
+                  <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 pr-24">
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${materialUrl ? "text-cyan-700 group-hover:text-cyan-900" : "text-slate-400"}`}>
+                      {materialUrl ? <><ExternalLink size={14} /> {getMediaActionLabel(resItem)}</> : "Material link unavailable"}
+                    </span>
+                  </div>
+                </>
+              );
 
-                <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
-                  {resItem.videoUrl ? (
+              return (
+                <div key={resItem._id} className="relative bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                  {materialUrl ? (
                     <a
-                      href={resItem.videoUrl}
+                      href={materialUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-700 hover:text-cyan-900"
+                      aria-label={`${getMediaActionLabel(resItem)}: ${resItem.title}`}
+                      className="group block p-5 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-700 hover:bg-slate-50 cursor-pointer"
                     >
-                      <ExternalLink size={14} /> View Material
+                      {cardContent}
                     </a>
-                  ) : <span className="text-xs text-slate-400">Resource file</span>}
-
+                  ) : <div className="p-5">{cardContent}</div>}
                   <button
                     onClick={() => setFeedbackModal(resItem.title)}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition-colors"
+                    className="absolute bottom-5 right-5 z-10 inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition-colors"
                   >
                     <MessageSquare size={13} /> Feedback
                   </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

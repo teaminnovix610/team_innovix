@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { FolderGit2, Upload, FileText, Video, File, Plus, Trash2, ExternalLink, BookOpen, Layers, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FolderGit2, Upload, Trash2, ExternalLink, CheckCircle2 } from "lucide-react";
 import api from "../../../services/api";
 import { toast } from "sonner";
-import LoadingState from "@/components/layout/LoadingState";
+import { getMediaActionLabel, getMediaUrl } from "@/lib/media";
 
 export default function TrainerLibraryPage() {
   const [recordings, setRecordings] = useState([]);
@@ -12,7 +12,7 @@ export default function TrainerLibraryPage() {
 
   const [formData, setFormData] = useState({
     batchId: "",
-    subject: "Oceanography",
+    subject: "",
     topic: "",
     title: "",
     description: "",
@@ -25,32 +25,53 @@ export default function TrainerLibraryPage() {
     fetchCourses();
   }, []);
 
-  const fetchLibrary = async () => {
+  async function fetchLibrary() {
     setLoading(true);
     try {
       const res = await api.get("/recordings");
       if (res.data?.data) {
         setRecordings(res.data.data);
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to load trainer library");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const fetchCourses = async () => {
+  async function fetchCourses() {
     try {
       const res = await api.get("/batches/my");
       if (res.data?.data) {
-        setCourses(res.data.data);
-        if (res.data.data.length > 0) {
-          setFormData((prev) => ({ ...prev, batchId: res.data.data[0]._id }));
+        const fetchedCourses = res.data.data;
+        setCourses(fetchedCourses);
+        if (fetchedCourses.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            batchId: fetchedCourses[0]._id,
+            subject: fetchedCourses[0].name || fetchedCourses[0].classLevel || "General",
+          }));
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            batchId: "",
+            subject: "",
+          }));
         }
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
+      toast.error("Failed to load assigned courses");
     }
+  }
+
+  const handleCategoryChange = (val) => {
+    const selectedCourse = courses.find((course) => course._id === val);
+    if (!selectedCourse) return;
+    setFormData((prev) => ({
+      ...prev,
+      batchId: selectedCourse._id,
+      subject: selectedCourse.name || selectedCourse.classLevel || selectedCourse.category || "General",
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -70,14 +91,20 @@ export default function TrainerLibraryPage() {
       }
     }
 
+    const payload = {
+      ...formData,
+      batchId: formData.batchId,
+      subject: formData.subject?.trim() || "General",
+    };
+
     try {
-      const res = await api.post("/recordings", formData);
+      const res = await api.post("/recordings", payload);
       if (res.data?.success) {
         toast.success("Resource uploaded and published to enrolled trainees!");
         setShowModal(false);
         setFormData({
           batchId: courses[0]?._id || "",
-          subject: "Oceanography",
+          subject: courses[0]?.name || courses[0]?.classLevel || "",
           topic: "",
           title: "",
           description: "",
@@ -96,7 +123,7 @@ export default function TrainerLibraryPage() {
       await api.delete(`/recordings/${id}`);
       toast.success("Resource removed from library");
       fetchLibrary();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete resource");
     }
   };
@@ -117,9 +144,11 @@ export default function TrainerLibraryPage() {
 
         <button
           onClick={() => setShowModal(true)}
-          className="px-5 py-3 bg-cyan-700 hover:bg-cyan-800 text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-lg transition-colors shrink-0"
+          disabled={courses.length === 0}
+          title={courses.length === 0 ? "Ask an administrator to assign a course first" : "Upload course material"}
+          className="px-5 py-3 bg-cyan-700 hover:bg-cyan-800 disabled:bg-slate-400 disabled:cursor-not-allowed text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-lg transition-colors shrink-0"
         >
-          <Upload size={16} /> Upload New Material
+          <Upload size={16} /> {courses.length === 0 ? "No Assigned Courses" : "Upload New Material"}
         </button>
       </div>
 
@@ -134,64 +163,55 @@ export default function TrainerLibraryPage() {
             <p className="text-slate-400">Click 'Upload New Material' to publish lectures, slides, and study notes.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recordings.map((rec) => (
-              <div
-                key={rec._id}
-                className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-100 text-cyan-800 uppercase tracking-wider">
-                      {rec.type?.replace("_", " ") || "RECORDED LECTURE"}
-                    </span>
-                    <button
-                      onClick={() => handleDelete(rec._id)}
-                      className="text-slate-300 hover:text-rose-600 p-1 rounded transition-colors"
-                      title="Delete Material"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-
-                  <h3 className="font-extrabold text-slate-900 text-base leading-snug">{rec.title}</h3>
-                  <p className="text-xs text-slate-600 line-clamp-2">{rec.description || "Capacity building technical study file."}</p>
-
-                  {/* Subject & Topic Badges */}
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {rec.subject && (
-                      <span className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-lg font-medium">
-                        Subject: {rec.subject}
-                      </span>
-                    )}
-                    {rec.topic && (
-                      <span className="text-[11px] bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-lg font-medium">
-                        Topic: {rec.topic}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                    <CheckCircle2 size={12} /> Available to Trainees
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {recordings.map((rec) => {
+              const materialUrl = getMediaUrl(rec);
+              const cardContent = (
+                <>
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-100 text-cyan-800 uppercase tracking-wider">
+                    {rec.type?.replaceAll("_", " ") || "RECORDED LECTURE"}
                   </span>
+                  <h3 className="font-extrabold text-slate-900 text-base leading-snug mt-3">{rec.title}</h3>
+                  <p className="text-xs text-slate-600 line-clamp-2 mt-2">{rec.description || "Capacity building technical study file."}</p>
+                  <div className="flex flex-wrap gap-1.5 pt-3">
+                    {rec.subject && <span className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-lg font-medium">Subject: {rec.subject}</span>}
+                    {rec.topic && <span className="text-[11px] bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-lg font-medium">Topic: {rec.topic}</span>}
+                  </div>
+                  <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                      <CheckCircle2 size={12} /> Available to Trainees
+                    </span>
+                    <span className={`inline-flex items-center gap-1 text-xs font-bold ${materialUrl ? "text-cyan-700 group-hover:text-cyan-900" : "text-slate-400"}`}>
+                      {materialUrl ? <><ExternalLink size={13} /> {getMediaActionLabel(rec)}</> : "Material link unavailable"}
+                    </span>
+                  </div>
+                </>
+              );
 
-                  {rec.videoUrl ? (
+              return (
+                <article key={rec._id} className="relative bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                  {materialUrl ? (
                     <a
-                      href={rec.videoUrl}
+                      href={materialUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-bold text-cyan-700 hover:text-cyan-900"
+                      aria-label={`${getMediaActionLabel(rec)}: ${rec.title}`}
+                      className="group block p-6 rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-700 hover:bg-slate-50 cursor-pointer"
                     >
-                      <ExternalLink size={13} /> Open Link
+                      {cardContent}
                     </a>
-                  ) : (
-                    <span className="text-xs text-slate-400">File attached</span>
-                  )}
-                </div>
-              </div>
-            ))}
+                  ) : <div className="p-6">{cardContent}</div>}
+                  <button
+                    onClick={() => handleDelete(rec._id)}
+                    className="absolute top-4 right-4 z-10 text-slate-400 hover:text-rose-600 p-1 rounded transition-colors bg-white/90"
+                    title="Delete Material"
+                    aria-label={`Delete ${rec.title}`}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </article>
+              );
+            })}
           </div>
         )}
       </div>
@@ -208,23 +228,28 @@ export default function TrainerLibraryPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 text-xs font-medium text-slate-700">
-              {/* Step 1: Select Course */}
+              {/* Step 1: Select Subject / Material Category */}
               <div>
-                <label className="block mb-1 font-bold text-slate-800">1. Select Target Course / Program *</label>
+                <label className="block mb-1 font-bold text-slate-800">
+                  1. Subject / Material Category *
+                </label>
                 <select
                   required
+                  disabled={courses.length === 0}
                   value={formData.batchId}
-                  onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
                   className="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-cyan-600 bg-white font-medium"
                 >
-                  <option value="">-- Choose Course --</option>
+                  <option value="" disabled>-- Select Subject / Category --</option>
                   {courses.map((c) => (
                     <option key={c._id} value={c._id}>
-                      {c.name} ({c.classLevel || "General"})
+                      {c.name} ({c.classLevel || c.category || "Assigned Subject"})
                     </option>
                   ))}
-                  <option value="">All Programs (General Knowledge Library)</option>
                 </select>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Materials are attached to the selected course and become available to enrolled trainees.
+                </p>
               </div>
 
               {/* Step 2: Subject & Topic */}

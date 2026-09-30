@@ -6,7 +6,6 @@ import DashboardCard from "../../../components/layout/DashboardCard";
 import { useMyAssessments } from "../../assessment/hooks/useMyAssessments";
 
 import {
-  Users,
   BookOpen,
   ClipboardList,
   Upload,
@@ -25,7 +24,7 @@ function useMyRecordings() {
   });
 }
 
-export default function TrainerDashboard({ data }) {
+export default function TrainerDashboard() {
   const navigate = useNavigate();
   const { data: assessments = [] } = useMyAssessments();
   const { data: recordings = [] } = useMyRecordings();
@@ -53,12 +52,6 @@ export default function TrainerDashboard({ data }) {
           value={recordings.length}
           icon={PlayCircle}
           onClick={() => navigate("/trainer-library")}
-        />
-        <DashboardCard
-          title="Competency Map"
-          value="View"
-          icon={Users}
-          onClick={() => navigate("/competency-mapping")}
         />
       </div>
 

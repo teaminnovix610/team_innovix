@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://lil-3rd.up.railway.app/api/:path*"
+      "destination": "https://teaminnovix-production.up.railway.app/api/:path*"
     },
     {
       "source": "/(.*)",

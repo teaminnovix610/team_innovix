@@ -10,18 +10,14 @@ export default function useCreateBatch() {
     mutationFn: createBatch,
 
     onSuccess: async (newBatch) => {
-      toast.success("Batch created");
+      toast.success(newBatch.teacherId ? "Course assigned" : "Batch created");
 
-      // Instantly update the cache
-      queryClient.setQueryData(["my-batches"], (old = []) => [
-        ...old,
-        newBatch,
-      ]);
-
-      // Also refetch in the background to stay in sync
+      // Admin assignments change a specific trainer's server-side list, so
+      // invalidate the prefix to refresh any cached trainer list on this client.
       await queryClient.invalidateQueries({
         queryKey: ["my-batches"],
       });
+      await queryClient.invalidateQueries({ queryKey: ["all-batches"] });
     },
 
     onError: (err) => {

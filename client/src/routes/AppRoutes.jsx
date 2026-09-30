@@ -40,6 +40,7 @@ import TrainerLibraryPage from "../features/library/pages/TrainerLibraryPage";
 import LearningResourcesPage from "../features/library/pages/LearningResourcesPage";
 import CourseCatalogPage from "../features/batch/pages/CourseCatalogPage";
 import CertificatesPage from "../features/certificate/pages/CertificatesPage";
+import SkillGapPage from "../features/skillGap/pages/SkillGapPage";
 
 // Weekly Test (public / guest)
 import WeeklyTestLandingPage from "../features/weeklyTest/pages/WeeklyTestLandingPage";
@@ -160,14 +161,29 @@ export default function AppRoutes() {
       >
         <Route path="/dashboard" element={<DashboardHome />} />
 
-        {/* Competency Mapping Page (accessible to all authenticated users) */}
-        <Route path="/competency-mapping" element={<CompetencyMappingPage />} />
+        <Route
+          path="/competency-mapping"
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <CompetencyMappingPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Course Catalog (accessible to all authenticated users) */}
         <Route path="/courses" element={<CourseCatalogPage />} />
 
         {/* Certifications Hub (accessible to all authenticated users) */}
         <Route path="/certificates" element={<CertificatesPage />} />
+        {/* Skill Gap & Learning Roadmap (Trainee) */}
+        <Route
+          path="/skill-gap"
+          element={
+            <ProtectedRoute allowedRoles={["TRAINEE", "STUDENT"]}>
+              <SkillGapPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin Pages */}
         <Route

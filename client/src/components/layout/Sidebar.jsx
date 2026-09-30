@@ -1,6 +1,5 @@
 import {
   LayoutDashboard,
-  Users,
   BookOpen,
   Video,
   User,
@@ -13,6 +12,7 @@ import {
   Award,
   ShieldCheck,
   Layers,
+  Target,
 } from "lucide-react";
 
 import Logo from "./Logo";
@@ -61,8 +61,9 @@ export default function Sidebar({ isOpen, onClose }) {
           <nav className="p-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-140px)]">
             <SidebarItem to="/dashboard" icon={LayoutDashboard} title="Dashboard" onClick={onClose} />
 
-            {/* Competency Mapping (Accessible to all roles) */}
-            <SidebarItem to="/competency-mapping" icon={Compass} title="Competency Mapping" onClick={onClose} />
+            {isAdmin && (
+              <SidebarItem to="/competency-mapping" icon={Compass} title="Competency Mapping" onClick={onClose} />
+            )}
 
             {isAdmin && (
               <>
@@ -99,6 +100,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 <SidebarItem to="/my-batch" icon={Layers} title="Enrolled Programs" onClick={onClose} />
                 <SidebarItem to="/learning-resources" icon={FolderGit2} title="Learning Library" onClick={onClose} />
                 <SidebarItem to="/tests" icon={ClipboardList} title="Subject Assessments" onClick={onClose} />
+                <SidebarItem to="/skill-gap" icon={Target} title="Skill Gap & Roadmap" onClick={onClose} />
                 <SidebarItem to="/certificates" icon={Award} title="My Certificates" onClick={onClose} />
               </>
             )}

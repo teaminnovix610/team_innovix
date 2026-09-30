@@ -34,7 +34,7 @@ export default function BatchDetailsPage() {
 
   const isAdmin = user?.role === "ADMIN";
   const isOwnerTeacher =
-    user?.role === "TEACHER" &&
+    ["TEACHER", "TRAINER"].includes(user?.role) &&
     String(batch.teacherId?.userId ?? batch.teacherId) === String(user?._id);
 
   const canDelete = isAdmin || isOwnerTeacher;

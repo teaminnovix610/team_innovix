@@ -6,7 +6,8 @@ export const getMyBatches = async () => {
 };
 
 export const createBatch = async (data) => {
-    const res = await api.post("/batches", data);
+    const endpoint = data.teacherId ? "/batches/assigned-course" : "/batches";
+    const res = await api.post(endpoint, data);
     return res.data.data;
 };
 

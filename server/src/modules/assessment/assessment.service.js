@@ -4,6 +4,7 @@ import attemptRepository from "../attempt/attempt.repository.js";
 import Teacher from "../../models/TeacherProfile.model.js";
 import Student from "../../models/Student.model.js";
 import User from "../../models/User.model.js";
+import Batch from "../../models/Batch.model.js";
 
 import ApiError from "../../shared/errors/ApiError.js";
 import HttpStatus from "../../shared/constants/HttpStatus.js";
@@ -148,14 +149,27 @@ class AssessmentService {
     return assessmentRepository.updateById(assessmentId, { status: "PUBLISHED" });
   }
 
-  async getForBatch(batchId, userRole) {
+  async getForBatch(batchId, userId, userRole) {
+    if (userRole !== "ADMIN") {
+      const batch = await Batch.findById(batchId);
+      if (!batch) throw new ApiError(HttpStatus.NOT_FOUND, "Batch not found");
+      if (["TEACHER", "TRAINER"].includes(userRole)) {
+        const teacher = await Teacher.findOne({ userId });
+        if (!teacher || batch.teacherId.toString() !== teacher._id.toString()) {
+          throw new ApiError(HttpStatus.FORBIDDEN, "You do not have access to this batch");
+        }
+      } else {
+        const student = await Student.findOne({ userId, batchIds: batch._id });
+        if (!student) throw new ApiError(HttpStatus.FORBIDDEN, "You are not enrolled in this batch");
+      }
+    }
     const isLearner = ["STUDENT", "TRAINEE"].includes(userRole?.toUpperCase());
     const filter = isLearner ? { status: { $in: ["PUBLISHED", "CLOSED"] } } : {};
     const assessments = await assessmentRepository.findByBatch(batchId, filter);
     return assessments.map(attachTimeStatus);
   }
 
-  async getDetail(assessmentId, userRole) {
+  async getDetail(assessmentId, userId, userRole) {
     const assessment = await assessmentRepository.findById(assessmentId);
 
     if (!assessment) {
@@ -163,6 +177,26 @@ class AssessmentService {
     }
 
     const isLearner = ["STUDENT", "TRAINEE"].includes(userRole?.toUpperCase());
+    if (isLearner) {
+      if (!["PUBLISHED", "CLOSED"].includes(assessment.status)) {
+        throw new ApiError(HttpStatus.NOT_FOUND, "Assessment not found");
+      }
+      if (assessment.audience === "BATCH") {
+        const student = await Student.findOne({ userId, batchIds: assessment.batchId });
+        if (!student) throw new ApiError(HttpStatus.FORBIDDEN, "You do not have access to this assessment");
+      } else if (assessment.audience === "PUBLIC" && assessment.classRange?.min != null && assessment.classRange?.max != null) {
+        const student = await Student.findOne({ userId }).select("classLevel");
+        const classLevel = Number(student?.classLevel);
+        if (!Number.isFinite(classLevel) || classLevel < assessment.classRange.min || classLevel > assessment.classRange.max) {
+          throw new ApiError(HttpStatus.FORBIDDEN, "You do not have access to this assessment");
+        }
+      }
+    } else if (["TEACHER", "TRAINER"].includes(userRole)) {
+      const teacher = await Teacher.findOne({ userId });
+      if (!teacher || assessment.teacherId.toString() !== teacher._id.toString()) {
+        throw new ApiError(HttpStatus.FORBIDDEN, "You do not own this assessment");
+      }
+    }
     const withAnswers = !isLearner;
     const questions = await assessmentRepository.findQuestionsByAssessment(assessmentId, withAnswers);
 
@@ -228,7 +262,9 @@ class AssessmentService {
     // For TRAINEE users with no Student record, return all published assessments
     const assessments = batchIds.length > 0
       ? await assessmentRepository.findForStudent(batchIds, classLevel)
-      : await assessmentRepository.findAllPublished();
+      : (await assessmentRepository.findAllPublished()).filter(
+          (assessment) => assessment.audience !== "BATCH"
+        );
 
     const withTimeStatus = assessments.map(attachTimeStatus);
 

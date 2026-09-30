@@ -22,6 +22,13 @@ class BatchController {
 
     }
 
+    async assignCourseToTrainer(req, res) {
+        const batch = await batchService.assignCourseToTrainer(req.validated.body);
+        return res.status(HttpStatus.CREATED).json(
+            new ApiResponse(HttpStatus.CREATED, "Course assigned to trainer successfully", batch)
+        );
+    }
+
     async myBatches(req, res) {
 
         const batches =
