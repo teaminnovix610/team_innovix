@@ -16,7 +16,7 @@ export default function Navbar({ toggleSidebar }) {
 
         <img
           src="/dashboardLogo.webp"
-          alt="LearnIndiaLive"
+          alt="CapacityConnect"
           className="w-40 h-auto sm:hidden"
         />
 

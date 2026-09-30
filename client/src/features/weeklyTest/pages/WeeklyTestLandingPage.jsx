@@ -28,7 +28,7 @@ function WeeklyTestShell({ children }) {
             <header className="flex items-center justify-between px-4 sm:px-8 py-2 sm:py-3 lg:py-2 relative z-10">
                 <img
                     src="/logo.webp"
-                    alt="LearnIndiaLive"
+                    alt="CapacityConnect"
                     className="w-52 sm:w-64 lg:w-48 h-auto"
                 />
             </header>

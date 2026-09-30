@@ -3,7 +3,7 @@ import ApiError from "../../shared/errors/ApiError.js";
 import HttpStatus from "../../shared/constants/HttpStatus.js";
 
 class UploadService {
-  async uploadImage(fileBuffer, folder = "learnindialive/questions") {
+  async uploadImage(fileBuffer, folder = "CapacityConnect/questions") {
     return new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { folder, resource_type: "image" },

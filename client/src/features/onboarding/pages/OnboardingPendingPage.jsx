@@ -57,7 +57,7 @@ export default function OnboardingPendingPage() {
                         style={{ animationDelay: "0.15s" }}
                     >
                         Welcome to{" "}
-                        <span className="text-orange-600">LearnIndiaLive</span>,{" "}
+                        <span className="text-orange-600">CapacityConnect</span>,{" "}
                         {user?.firstName}!
                     </h1>
 
@@ -65,7 +65,7 @@ export default function OnboardingPendingPage() {
                         className="text-sm sm:text-base text-slate-600 fade-in-up"
                         style={{ animationDelay: "0.2s" }}
                     >
-                        Thank you for choosing LearnIndiaLive to share your knowledge
+                        Thank you for choosing CapacityConnect to share your knowledge
                         and inspire learners.
                     </p>
 

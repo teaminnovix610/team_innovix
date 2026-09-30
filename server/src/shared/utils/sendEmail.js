@@ -10,7 +10,7 @@ const sendEmail = async (to, subject, text, html) => {
         },
         body: JSON.stringify({
             sender: {
-                name: "LearnIndiaLive",
+                name: "CapacityConnect",
                 email: env.BREVO_SENDER_EMAIL,
             },
             to: [{ email: to }],

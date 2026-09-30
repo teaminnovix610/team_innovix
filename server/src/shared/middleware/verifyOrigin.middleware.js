@@ -1,5 +1,5 @@
 const ALLOWED_ORIGINS = [
-    "https://learnindialive.vercel.app",
+    "https://CapacityConnect.vercel.app",
     "http://localhost:5173",
 ];
 

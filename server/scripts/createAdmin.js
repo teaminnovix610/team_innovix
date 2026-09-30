@@ -11,7 +11,7 @@ async function createAdmin() {
 
     await mongoose.connect(env.MONGO_URI);
 
-    const existing = await User.findOne({ email: "admin@learnindialive.com" });
+    const existing = await User.findOne({ email: "admin@CapacityConnect.com" });
 
     if (existing) {
         console.log("Admin already exists:", existing.email);

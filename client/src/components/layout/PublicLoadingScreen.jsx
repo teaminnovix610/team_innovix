@@ -23,7 +23,7 @@ export default function PublicLoadingScreen() {
             L
           </div>
           <span className="text-lg sm:text-xl font-extrabold text-slate-800">
-            LearnIndiaLive
+            CapacityConnect
           </span>
         </div>
       </header>
@@ -31,7 +31,7 @@ export default function PublicLoadingScreen() {
       {/* Centered loading state, where LoginForm would normally sit */}
       <div className="flex-1 flex flex-col items-center justify-center gap-6 p-4 sm:p-8 relative z-10">
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 animate-pulse text-center">
-          LearnIndiaLive
+          CapacityConnect
         </h1>
 
         <div className="w-10 h-10 border-[3px] border-orange-100 border-t-orange-500 rounded-full animate-spin" />

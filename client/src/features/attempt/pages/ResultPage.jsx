@@ -63,7 +63,7 @@
 //                         L
 //                     </div>
 //                     <span className="text-lg sm:text-xl font-extrabold text-slate-800">
-//                         LearnIndiaLive
+//                         CapacityConnect
 //                     </span>
 //                 </div>
 //             </header>
@@ -193,7 +193,7 @@ export default function ResultPage({ mode }) {
                         L
                     </div>
                     <span className="text-lg sm:text-xl font-extrabold text-slate-800">
-                        LearnIndiaLive
+                        CapacityConnect
                     </span>
                 </div>
             </header>

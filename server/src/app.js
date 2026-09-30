@@ -28,7 +28,7 @@ app.use(compression());
 // CORS
 app.use(
   cors({
-    origin: ["https://learnindialive.vercel.app", "http://localhost:5173"],
+    origin: ["https://CapacityConnect.vercel.app", "http://localhost:5173"],
     credentials: true,
   })
 );
@@ -60,7 +60,7 @@ app.use("/api/v1", routes);
 app.get("/health", (req, res) => {
     res.status(200).json({
         success: true,
-        message: "LearnIndiaLive API Running 🚀"
+        message: "CapacityConnect API Running 🚀"
     });
 });
 
